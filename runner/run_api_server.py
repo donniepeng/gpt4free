@@ -7,4 +7,4 @@ g4f.debug.version = "0.3.1.7"
 
 from g4f.api import run_api
 
-run_api()
+run_api(port=6337)
