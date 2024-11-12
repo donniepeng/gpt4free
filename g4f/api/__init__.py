@@ -219,8 +219,9 @@ class Api:
                     response_format=config.response_format
                 )
                 # Convert Image objects to dictionaries
-                response_data = [image.to_dict() for image in response.data]
-                return JSONResponse({"data": response_data})
+                # response_data = [image.to_dict() for image in response.data]
+                # return JSONResponse({"data": response_data})
+                return JSONResponse({"data": response.to_json()['data']})
             except Exception as e:
                 logging.exception(e)
                 return Response(content=format_exception(e, config), status_code=500, media_type="application/json")

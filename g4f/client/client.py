@@ -424,12 +424,21 @@ class Image:
     def __repr__(self):
         return f"Image(url={self.url}, b64_json={'<base64 data>' if self.b64_json else None})"
 
+    def to_json(self):
+        return self.__dict__
+
 class ImagesResponse:
     def __init__(self, data: list[Image]):
         self.data = data
 
     def __repr__(self):
         return f"ImagesResponse(data={self.data})"
+
+    def to_json(self):
+        return {
+            **self.__dict__,
+            "data": [image.to_json() for image in self.data]
+        }
 
 class Images:
     def __init__(self, client: 'Client', provider: 'ImageProvider' = None):
