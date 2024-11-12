@@ -2,12 +2,19 @@ import json
 
 import requests
 
+LOCAL_HOST = 'localhost'
+REMOTE_HOST = '119.28.43.197'
+PORT = 6337
 
-def api_chat_completions(role: str, prompt: str) -> str:
-    url = "http://localhost:1337/v1/chat/completions"
+g_is_local_host = False
+HOST = LOCAL_HOST if g_is_local_host else REMOTE_HOST
+
+
+def api_chat_completions(role: str, prompt: str, provider: str = None, model: str = None) -> str:
+    url = f"http://{HOST}:{PORT}/v1/chat/completions"
     body = {
-        "provider": "Blackbox AI",
-        "model": "gpt-3.5-turbo",
+        "provider": provider if provider is not None else "Blackbox AI",
+        "model": model if model is not None else "gpt-3.5-turbo",
         "stream": False,
         "messages": [
             {"role": role, "content": prompt}
@@ -19,10 +26,10 @@ def api_chat_completions(role: str, prompt: str) -> str:
     return choice.get('message', {}).get('content', '')
 
 
-def api_generate_image(prompt: str, is_url: bool = True) -> str:
-    url = "http://localhost:1337/v1/images/generate"
+def api_generate_image(prompt: str, is_url: bool = True, model: str = None) -> str:
+    url = f"http://{HOST}:{PORT}/v1/images/generate"
     body = {
-        "model": "flux",
+        "model": model if model is not None else "flux",
         "response_format": "url" if is_url else "b64_json",
         "prompt": prompt
     }
@@ -31,7 +38,7 @@ def api_generate_image(prompt: str, is_url: bool = True) -> str:
 
 
 def api_list_models() -> dict:
-    url = "http://localhost:1337/v1/models"
+    url = f"http://{HOST}:{PORT}/v1/models"
     return requests.get(url).json()
 
 
