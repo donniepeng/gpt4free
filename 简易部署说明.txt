@@ -1,4 +1,6 @@
 1. 安装软件：
 python、git、乌龟git、NodeJS、PyCharm和谐版
 
-2. 
+2. 防火墙开放端口：
+TCP 6080 for gui
+TCP 6337 for api
