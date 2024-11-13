@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os.path
+
+import g4f
 from ..providers.types          import BaseProvider, ProviderType
 from ..providers.retry_provider import RetryProvider, IterListProvider
 from ..providers.base_provider  import AsyncProvider, AsyncGeneratorProvider
@@ -70,8 +73,13 @@ from .TeachAnything    import TeachAnything
 from .Upstage          import Upstage
 from .WhiteRabbitNeo   import WhiteRabbitNeo
 from .You              import You
+from .TogBlackbox import TogBlackbox
 
 import sys
+
+_current_dir = os.path.abspath(os.path.dirname(__file__))
+g4f.debug.gz = os.path.isfile(os.path.join(_current_dir, "is_gz"))
+print(f'g4f.debug.gz = {g4f.debug.gz}')
 
 __modules__: list = [
     getattr(sys.modules[__name__], provider) for provider in dir()
@@ -80,8 +88,13 @@ __modules__: list = [
 __providers__: list[ProviderType] = [
     provider for provider in __modules__
     if isinstance(provider, type)
-    and issubclass(provider, BaseProvider)
+    and issubclass(provider, BaseProvider) and (not g4f.debug.gz or g4f.debug.gz and provider.__name__.startswith("Tog"))
 ]
+
+print("Available providers:")
+for provider in __providers__:
+    print(provider.__name__)
+
 __all__: list[str] = [
     provider.__name__ for provider in __providers__
 ]

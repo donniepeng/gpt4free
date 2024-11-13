@@ -17,5 +17,4 @@ g4f.debug.version = "0.3.1.7"
 if __name__ == "__main__":
     parser = gui_parser()
     args = parser.parse_args()
-    args.port = 6080
     run_gui_args(args)
