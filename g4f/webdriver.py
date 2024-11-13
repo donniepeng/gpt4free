@@ -22,6 +22,7 @@ from os import access, R_OK
 from .typing import Cookies
 from .errors import MissingRequirementsError
 from . import debug
+import undetected_chromedriver
 
 try:
     from pyvirtualdisplay import Display
