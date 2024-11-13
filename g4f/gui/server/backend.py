@@ -43,6 +43,10 @@ class Backend_Api(Api):
                 'function': self.get_version,
                 'methods': ['GET']
             },
+            '/backend-api/v2/local_version': {
+                'function': self.get_local_version,
+                'methods': ['GET']
+            },
             '/backend-api/v2/conversation': {
                 'function': self.handle_conversation,
                 'methods': ['POST']

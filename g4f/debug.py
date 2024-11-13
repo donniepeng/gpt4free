@@ -5,4 +5,4 @@ version_check: bool = True
 last_provider: ProviderType = None
 last_model: str = None
 version: str = None
-gz: bool = False
+is_use_api: bool = False

@@ -103,6 +103,16 @@ class Api:
             "latest_version": version.utils.latest_version,
         }
 
+    @staticmethod
+    def get_local_version():
+        try:
+            current_version = version.utils.current_version
+        except VersionNotFoundError:
+            current_version = None
+        return {
+            "version": current_version
+        }
+
     def serve_images(self, name):
         ensure_images_dir()
         return send_from_directory(os.path.abspath(images_dir), name)

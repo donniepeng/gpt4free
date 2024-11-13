@@ -29,7 +29,7 @@ def run_webview(
     webview.settings['ALLOW_DOWNLOADS'] = True
     webview.create_window(
         f"g4f - {g4f.version.utils.current_version}",
-        os.path.join(dirname, "client/index.html"),
+        os.path.join(dirname, "client/index_use_api.html" if g4f.debug.is_use_api else "client/index.html"),
         text_select=True,
         js_api=JsApi(),
     )

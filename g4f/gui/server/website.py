@@ -1,6 +1,9 @@
 import uuid
 from flask import render_template, redirect
 
+import g4f.debug
+
+
 class Website:
     def __init__(self, app) -> None:
         self.app = app
@@ -36,7 +39,7 @@ class Website:
     def _chat(self, conversation_id):
         if '-' not in conversation_id:
             return redirect('/chat')
-        return render_template('index.html', chat_id=conversation_id)
+        return render_template('index_use_api.html' if g4f.debug.is_use_api else 'index.html', chat_id=conversation_id)
 
     def _index(self):
-        return render_template('index.html', chat_id=str(uuid.uuid4()))
+        return render_template('index_use_api.html' if g4f.debug.is_use_api else 'index.html', chat_id=str(uuid.uuid4()))
