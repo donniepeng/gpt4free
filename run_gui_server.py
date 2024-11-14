@@ -11,6 +11,7 @@ ssl.create_default_context = partial(
 from g4f.gui.run import run_gui_args, gui_parser
 import g4f.debug
 
+g4f.debug.logging = True
 g4f.debug.version_check = False
 g4f.debug.version = "0.3.1.7"
 

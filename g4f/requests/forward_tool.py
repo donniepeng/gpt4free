@@ -14,13 +14,13 @@ FORWARD_PORT = 8201
 FORWARD_STATUS_CODE = 417
 
 
-def request_get_response(headers: dict, url: str, timeout: int = 30) -> Response:
+def request_get_response(headers: dict or None, url: str, timeout: int = 30) -> Response:
     method = 'GET'
     body = _build_forward_data(method, headers, None, None, url, timeout)
     return requests.post(url=_get_forward_url(), data=body)
 
 
-def request_get_and_decrypt_response(headers: dict, url: str, timeout: int = 30):
+def request_get_and_decrypt_response(headers: dict or None, url: str, timeout: int = 30):
     r = request_get_response(headers, url, timeout=timeout)
     status = r.status_code
     print('*** status_code=%d\n*** url=%s' % (int(status), str(url)))
@@ -33,14 +33,14 @@ def request_get_and_decrypt_response(headers: dict, url: str, timeout: int = 30)
     return status, content
 
 
-def request_post_response(headers: dict, url: str, data: any = None, json_obj: any = None,
+def request_post_response(headers: dict or None, url: str, data: any = None, json_obj: any = None,
                           timeout: int = 30) -> Response:
     method = 'POST'
     body = _build_forward_data(method, headers, data, json_obj, url, timeout)
     return requests.post(url=_get_forward_url(), data=body)
 
 
-def request_post_and_decrypt_response(headers: dict, url: str, data: any = None, json_obj: any = None,
+def request_post_and_decrypt_response(headers: dict or None, url: str, data: any = None, json_obj: any = None,
                                       timeout: int = 30):
     r = request_post_response(headers, url, data=data, json_obj=json_obj, timeout=timeout)
     status = r.status_code
@@ -58,7 +58,7 @@ def _get_forward_url() -> str:
 
 
 # 构造转发的加密数据
-def _build_forward_data(method: str, headers: dict, data: any, json_obj: any, url: str, timeout: int) -> bytes:
+def _build_forward_data(method: str, headers: dict or None, data: any, json_obj: any, url: str, timeout: int) -> bytes:
     raw_data_dict = {
         'method': str(method).upper(),
         'headers': headers,

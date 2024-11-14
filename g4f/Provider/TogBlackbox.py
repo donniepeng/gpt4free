@@ -11,6 +11,9 @@ from typing import Optional, AsyncGenerator, Union
 
 from aiohttp import ClientSession, ClientResponseError
 
+from .my_blackbox import api_client
+from .my_blackbox.api_client import TextPrompt
+from ..providers.base_provider import AsyncProvider
 from ..typing import AsyncResult, Messages, ImageType
 from .base_provider import AsyncGeneratorProvider, ProviderModelMixin
 from ..image import ImageResponse, to_data_uri
@@ -21,7 +24,7 @@ class TogBlackbox(AsyncGeneratorProvider, ProviderModelMixin):
     url = "https://www.blackbox.ai"
     api_endpoint = "https://www.blackbox.ai/api/chat"
     working = True
-    supports_stream = True
+    supports_stream = False
     supports_system_message = True
     supports_message_history = True
 
@@ -128,52 +131,52 @@ class TogBlackbox(AsyncGeneratorProvider, ProviderModelMixin):
         else:
             return cls.default_model
 
-    @staticmethod
-    def generate_random_string(length: int = 7) -> str:
-        characters = string.ascii_letters + string.digits
-        return ''.join(random.choices(characters, k=length))
-
-    @staticmethod
-    def generate_next_action() -> str:
-        return uuid.uuid4().hex
-
-    @staticmethod
-    def generate_next_router_state_tree() -> str:
-        router_state = [
-            "",
-            {
-                "children": [
-                    "(chat)",
-                    {
-                        "children": [
-                            "__PAGE__",
-                            {}
-                        ]
-                    }
-                ]
-            },
-            None,
-            None,
-            True
-        ]
-        return json.dumps(router_state)
-
-    @staticmethod
-    def clean_response(text: str) -> str:
-        pattern = r'^\$\@\$v=undefined-rv1\$\@\$'
-        cleaned_text = re.sub(pattern, '', text)
-        return cleaned_text
+    # @staticmethod
+    # def generate_random_string(length: int = 7) -> str:
+    #     characters = string.ascii_letters + string.digits
+    #     return ''.join(random.choices(characters, k=length))
+    #
+    # @staticmethod
+    # def generate_next_action() -> str:
+    #     return uuid.uuid4().hex
+    #
+    # @staticmethod
+    # def generate_next_router_state_tree() -> str:
+    #     router_state = [
+    #         "",
+    #         {
+    #             "children": [
+    #                 "(chat)",
+    #                 {
+    #                     "children": [
+    #                         "__PAGE__",
+    #                         {}
+    #                     ]
+    #                 }
+    #             ]
+    #         },
+    #         None,
+    #         None,
+    #         True
+    #     ]
+    #     return json.dumps(router_state)
+    #
+    # @staticmethod
+    # def clean_response(text: str) -> str:
+    #     pattern = r'^\$\@\$v=undefined-rv1\$\@\$'
+    #     cleaned_text = re.sub(pattern, '', text)
+    #     return cleaned_text
 
     @classmethod
     async def create_async_generator(
-        cls,
-        model: str,
-        messages: Messages,
-        proxy: Optional[str] = None,
-        image: ImageType = None,
-        image_name: str = None,
-        web_search: bool = False,
-        **kwargs
+            cls,
+            model: str,
+            messages: Messages,
+            proxy: Optional[str] = None,
+            image: ImageType = None,
+            image_name: str = None,
+            web_search: bool = False,
+            **kwargs
     ) -> AsyncGenerator[Union[str, ImageResponse], None]:
         """
         Creates an asynchronous generator for streaming responses from Blackbox AI.
@@ -190,183 +193,192 @@ class TogBlackbox(AsyncGeneratorProvider, ProviderModelMixin):
         Yields:
             Union[str, ImageResponse]: Segments of the generated response or ImageResponse objects.
         """
-        
-        if image is not None:
-            messages[-1]['data'] = {
-                'fileText': '',
-                'imageBase64': to_data_uri(image),
-                'title': image_name
-            }
-            messages[-1]['content'] = 'FILE:BB\n$#$\n\n$#$\n' + messages[-1]['content']
-        
+
+        # if image is not None:
+        #     messages[-1]['data'] = {
+        #         'fileText': '',
+        #         'imageBase64': to_data_uri(image),
+        #         'title': image_name
+        #     }
+        #     messages[-1]['content'] = 'FILE:BB\n$#$\n\n$#$\n' + messages[-1]['content']
+
         model = cls.get_model(model)
 
-        chat_id = cls.generate_random_string()
-        next_action = cls.generate_next_action()
-        next_router_state_tree = cls.generate_next_router_state_tree()
+        # chat_id = cls.generate_random_string()
+        # next_action = cls.generate_next_action()
+        # next_router_state_tree = cls.generate_next_router_state_tree()
 
-        agent_mode = cls.agentMode.get(model, {})
-        trending_agent_mode = cls.trendingAgentMode.get(model, {})
+        # agent_mode = cls.agentMode.get(model, {})
+        # trending_agent_mode = cls.trendingAgentMode.get(model, {})
 
-        prefix = cls.model_prefixes.get(model, "")
-        
-        formatted_prompt = ""
+        # prefix = cls.model_prefixes.get(model, "")
+
+        # formatted_prompt = ""
+        prompts: [TextPrompt] = []
         for message in messages:
             role = message.get('role', '').capitalize()
             content = message.get('content', '')
             if role and content:
-                formatted_prompt += f"{role}: {content}\n"
-        
-        if prefix:
-            formatted_prompt = f"{prefix} {formatted_prompt}".strip()
+                # formatted_prompt += f"{role}: {content}\n"
+                prompts.append(TextPrompt(role, content))
 
-        referer_path = cls.model_referers.get(model, f"/?model={model}")
-        referer_url = f"{cls.url}{referer_path}"
+        answer = await api_client.api_chat_completions(prompts=prompts, provider=None, model=model,
+                                                       stream=cls.supports_stream)
+        print(answer)
+        unnecessary_words = 'Generated by BLACKBOX.AI, try unlimited chat https://www.blackbox.ai\n\n'.lower()
+        answer = answer if unnecessary_words not in answer.lower() else answer[len(unnecessary_words):]
+        yield answer
 
-        common_headers = {
-            'accept': '*/*',
-            'accept-language': 'en-US,en;q=0.9',
-            'cache-control': 'no-cache',
-            'origin': cls.url,
-            'pragma': 'no-cache',
-            'priority': 'u=1, i',
-            'sec-ch-ua': '"Chromium";v="129", "Not=A?Brand";v="8"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Linux"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) '
-                          'AppleWebKit/537.36 (KHTML, like Gecko) '
-                          'Chrome/129.0.0.0 Safari/537.36'
-        }
+        # if prefix:
+        #     formatted_prompt = f"{prefix} {formatted_prompt}".strip()
 
-        headers_api_chat = {
-            'Content-Type': 'application/json',
-            'Referer': referer_url
-        }
-        headers_api_chat_combined = {**common_headers, **headers_api_chat}
+        # referer_path = cls.model_referers.get(model, f"/?model={model}")
+        # referer_url = f"{cls.url}{referer_path}"
 
-        payload_api_chat = {
-            "messages": [
-                {
-                    "id": chat_id,
-                    "content": formatted_prompt,
-                    "role": "user",
-					"data": messages[-1].get('data')
-                }
-            ],
-            "id": chat_id,
-            "previewToken": None,
-            "userId": None,
-            "codeModelMode": True,
-            "agentMode": agent_mode,
-            "trendingAgentMode": trending_agent_mode,
-            "isMicMode": False,
-            "userSystemPrompt": None,
-            "maxTokens": 1024,
-            "playgroundTopP": 0.9,
-            "playgroundTemperature": 0.5,
-            "isChromeExt": False,
-            "githubToken": None,
-            "clickedAnswer2": False,
-            "clickedAnswer3": False,
-            "clickedForceWebSearch": False,
-            "visitFromDelta": False,
-            "mobileClient": False,
-            "webSearchMode": web_search,
-            "userSelectedModel": cls.userSelectedModel.get(model, model)
-        }
-
-        headers_chat = {
-            'Accept': 'text/x-component',
-            'Content-Type': 'text/plain;charset=UTF-8',
-            'Referer': f'{cls.url}/chat/{chat_id}?model={model}',
-            'next-action': next_action,
-            'next-router-state-tree': next_router_state_tree,
-            'next-url': '/'
-        }
-        headers_chat_combined = {**common_headers, **headers_chat}
-
-        data_chat = '[]'
-
-        async with ClientSession(headers=common_headers) as session:
-            try:
-                async with session.post(
-                    cls.api_endpoint,
-                    headers=headers_api_chat_combined,
-                    json=payload_api_chat,
-                    proxy=proxy
-                ) as response_api_chat:
-                    response_api_chat.raise_for_status()
-                    text = await response_api_chat.text()
-                    cleaned_response = cls.clean_response(text)
-
-                    if model in cls.image_models:
-                        match = re.search(r'!\[.*?\]\((https?://[^\)]+)\)', cleaned_response)
-                        if match:
-                            image_url = match.group(1)
-                            image_response = ImageResponse(images=image_url, alt="Generated Image")
-                            yield image_response
-                        else:
-                            yield cleaned_response
-                    else:
-                        if web_search:
-                            match = re.search(r'\$~~~\$(.*?)\$~~~\$', cleaned_response, re.DOTALL)
-                            if match:
-                                source_part = match.group(1).strip()
-                                answer_part = cleaned_response[match.end():].strip()
-                                try:
-                                    sources = json.loads(source_part)
-                                    source_formatted = "**Source:**\n"
-                                    for item in sources:
-                                        title = item.get('title', 'No Title')
-                                        link = item.get('link', '#')
-                                        position = item.get('position', '')
-                                        source_formatted += f"{position}. [{title}]({link})\n"
-                                    final_response = f"{answer_part}\n\n{source_formatted}"
-                                except json.JSONDecodeError:
-                                    final_response = f"{answer_part}\n\nSource information is unavailable."
-                            else:
-                                final_response = cleaned_response
-                        else:
-                            if '$~~~$' in cleaned_response:
-                                final_response = cleaned_response.split('$~~~$')[0].strip()
-                            else:
-                                final_response = cleaned_response
-
-                        yield final_response
-            except ClientResponseError as e:
-                error_text = f"Error {e.status}: {e.message}"
-                try:
-                    error_response = await e.response.text()
-                    cleaned_error = cls.clean_response(error_response)
-                    error_text += f" - {cleaned_error}"
-                except Exception:
-                    pass
-                yield error_text
-            except Exception as e:
-                yield f"Unexpected error during /api/chat request: {str(e)}"
-
-            chat_url = f'{cls.url}/chat/{chat_id}?model={model}'
-
-            try:
-                async with session.post(
-                    chat_url,
-                    headers=headers_chat_combined,
-                    data=data_chat,
-                    proxy=proxy
-                ) as response_chat:
-                    response_chat.raise_for_status()
-                    pass
-            except ClientResponseError as e:
-                error_text = f"Error {e.status}: {e.message}"
-                try:
-                    error_response = await e.response.text()
-                    cleaned_error = cls.clean_response(error_response)
-                    error_text += f" - {cleaned_error}"
-                except Exception:
-                    pass
-                yield error_text
-            except Exception as e:
-                yield f"Unexpected error during /chat/{chat_id} request: {str(e)}"
+        # common_headers = {
+        #     'accept': '*/*',
+        #     'accept-language': 'en-US,en;q=0.9',
+        #     'cache-control': 'no-cache',
+        #     'origin': cls.url,
+        #     'pragma': 'no-cache',
+        #     'priority': 'u=1, i',
+        #     'sec-ch-ua': '"Chromium";v="129", "Not=A?Brand";v="8"',
+        #     'sec-ch-ua-mobile': '?0',
+        #     'sec-ch-ua-platform': '"Linux"',
+        #     'sec-fetch-dest': 'empty',
+        #     'sec-fetch-mode': 'cors',
+        #     'sec-fetch-site': 'same-origin',
+        #     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) '
+        #                   'AppleWebKit/537.36 (KHTML, like Gecko) '
+        #                   'Chrome/129.0.0.0 Safari/537.36'
+        # }
+        #
+        # headers_api_chat = {
+        #     'Content-Type': 'application/json',
+        #     'Referer': referer_url
+        # }
+        # headers_api_chat_combined = {**common_headers, **headers_api_chat}
+        #
+        # payload_api_chat = {
+        #     "messages": [
+        #         {
+        #             "id": chat_id,
+        #             "content": formatted_prompt,
+        #             "role": "user",
+    # 			"data": messages[-1].get('data')
+    #         }
+    #     ],
+    #     "id": chat_id,
+    #     "previewToken": None,
+    #     "userId": None,
+    #     "codeModelMode": True,
+    #     "agentMode": agent_mode,
+    #     "trendingAgentMode": trending_agent_mode,
+    #     "isMicMode": False,
+    #     "userSystemPrompt": None,
+    #     "maxTokens": 1024,
+    #     "playgroundTopP": 0.9,
+    #     "playgroundTemperature": 0.5,
+    #     "isChromeExt": False,
+    #     "githubToken": None,
+    #     "clickedAnswer2": False,
+    #     "clickedAnswer3": False,
+    #     "clickedForceWebSearch": False,
+    #     "visitFromDelta": False,
+    #     "mobileClient": False,
+    #     "webSearchMode": web_search,
+    #     "userSelectedModel": cls.userSelectedModel.get(model, model)
+    # }
+    #
+    # headers_chat = {
+    #     'Accept': 'text/x-component',
+    #     'Content-Type': 'text/plain;charset=UTF-8',
+    #     'Referer': f'{cls.url}/chat/{chat_id}?model={model}',
+    #     'next-action': next_action,
+    #     'next-router-state-tree': next_router_state_tree,
+    #     'next-url': '/'
+    # }
+    # headers_chat_combined = {**common_headers, **headers_chat}
+    #
+    # data_chat = '[]'
+    #
+    # async with ClientSession(headers=common_headers) as session:
+    #     try:
+    #         async with session.post(
+    #             cls.api_endpoint,
+    #             headers=headers_api_chat_combined,
+    #             json=payload_api_chat,
+    #             proxy=proxy
+    #         ) as response_api_chat:
+    #             response_api_chat.raise_for_status()
+    #             text = await response_api_chat.text()
+    #             cleaned_response = cls.clean_response(text)
+    #
+    #             if model in cls.image_models:
+    #                 match = re.search(r'!\[.*?\]\((https?://[^\)]+)\)', cleaned_response)
+    #                 if match:
+    #                     image_url = match.group(1)
+    #                     image_response = ImageResponse(images=image_url, alt="Generated Image")
+    #                     yield image_response
+    #                 else:
+    #                     yield cleaned_response
+    #             else:
+    #                 if web_search:
+    #                     match = re.search(r'\$~~~\$(.*?)\$~~~\$', cleaned_response, re.DOTALL)
+    #                     if match:
+    #                         source_part = match.group(1).strip()
+    #                         answer_part = cleaned_response[match.end():].strip()
+    #                         try:
+    #                             sources = json.loads(source_part)
+    #                             source_formatted = "**Source:**\n"
+    #                             for item in sources:
+    #                                 title = item.get('title', 'No Title')
+    #                                 link = item.get('link', '#')
+    #                                 position = item.get('position', '')
+    #                                 source_formatted += f"{position}. [{title}]({link})\n"
+    #                             final_response = f"{answer_part}\n\n{source_formatted}"
+    #                         except json.JSONDecodeError:
+    #                             final_response = f"{answer_part}\n\nSource information is unavailable."
+    #                     else:
+    #                         final_response = cleaned_response
+    #                 else:
+    #                     if '$~~~$' in cleaned_response:
+    #                         final_response = cleaned_response.split('$~~~$')[0].strip()
+    #                     else:
+    #                         final_response = cleaned_response
+    #
+    #                 yield final_response
+    #     except ClientResponseError as e:
+    #         error_text = f"Error {e.status}: {e.message}"
+    #         try:
+    #             error_response = await e.response.text()
+    #             cleaned_error = cls.clean_response(error_response)
+    #             error_text += f" - {cleaned_error}"
+    #         except Exception:
+    #             pass
+    #         yield error_text
+    #     except Exception as e:
+    #         yield f"Unexpected error during /api/chat request: {str(e)}"
+    #
+    #     chat_url = f'{cls.url}/chat/{chat_id}?model={model}'
+    #
+    #     try:
+    #         async with session.post(
+    #             chat_url,
+    #             headers=headers_chat_combined,
+    #             data=data_chat,
+    #             proxy=proxy
+    #         ) as response_chat:
+    #             response_chat.raise_for_status()
+    #             pass
+    #     except ClientResponseError as e:
+    #         error_text = f"Error {e.status}: {e.message}"
+    #         try:
+    #             error_response = await e.response.text()
+    #             cleaned_error = cls.clean_response(error_response)
+    #             error_text += f" - {cleaned_error}"
+    #         except Exception:
+    #             pass
+    #         yield error_text
+    #     except Exception as e:
+    #         yield f"Unexpected error during /chat/{chat_id} request: {str(e)}"

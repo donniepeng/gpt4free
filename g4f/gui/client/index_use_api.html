@@ -10,7 +10,7 @@
     <meta property="og:image" content="https://openai.com/content/images/2022/11/ChatGPT.jpg">
     <meta property="og:description" content="A conversational AI system that listens, learns, and challenges">
     <meta property="og:url" content="https://g4f.ai">
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style_use_api.css">
     <link rel="apple-touch-icon" sizes="180x180" href="/static/img/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/img/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/static/img/favicon-16x16.png">
@@ -18,7 +18,7 @@
     <script src="/static/js/icons.js"></script>
     <script src="/static/js/highlightjs-copy.min.js"></script>
     <script src="/static/js/chat_use_api.v1.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <script src="/static/js/markdown-it.min.js"></script>
     <link rel="stylesheet" href="/static/css/dracula.min.css">
     <script>
         MathJax = {
@@ -28,14 +28,14 @@
             }
         };
     </script>
-    <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/mistral-tokenizer-js" async>
+    <script id="MathJax-script" src="/static/js/tex-mml-chtml.js" async></script>
+    <script type="module" src="/static/js/mistral-tokenizer.js" async>
         import mistralTokenizer from "mistral-tokenizer-js"
     </script>
-    <script type="module" src="https://cdn.jsdelivr.net/gh/belladoreai/llama-tokenizer-js@master/llama-tokenizer.js" async>
+    <script type="module" src="/static/js/llama-tokenizer.js" async>
         import llamaTokenizer from "llama-tokenizer-js"
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/gpt-tokenizer/dist/cl100k_base.js" async></script>
+    <script src="/static/js/cl100k_base.js" async></script>
     <script src="/static/js/text_to_speech/index.js" async></script>
     <!--
             <script src="/static/js/whisper-web/index.js" async></script>
@@ -66,7 +66,7 @@
                     <span>Images Album</span>
                 </button>
                 -->
-                <button onclick="open_settings();">
+                <button id="settings-button" onclick="open_settings();">
                     <i class="fa-solid fa-toolbox"></i>
                     <span>Settings</span>
                 </button>
@@ -193,18 +193,18 @@
                 <div class="box input-box">
                     <textarea id="message-input" placeholder="Ask a question" cols="30" rows="10"
                         style="white-space: pre-wrap;resize: none;"></textarea>
-                    <label class="file-label image-label" for="image" title="Works with Bing, Gemini, OpenaiChat and You">
-                        <input type="file" id="image" name="image" accept="image/*" required/>
-                        <i class="fa-regular fa-image"></i>
-                    </label>
+{#                    <label class="file-label image-label" for="image" title="Works with Bing, Gemini, OpenaiChat and You">#}
+{#                        <input type="file" id="image" name="image" accept="image/*" required/>#}
+{#                        <i class="fa-regular fa-image"></i>#}
+{#                    </label>#}
 {#                    <label class="file-label image-label" for="camera">#}
 {#                        <input type="file" id="camera" name="camera" accept="image/*" capture="camera" required/>#}
 {#                        <i class="fa-solid fa-camera"></i>#}
 {#                    </label>#}
-                    <label class="file-label" for="file">
-                        <input type="file" id="file" name="file" accept="text/plain, text/html, text/xml, application/json, text/javascript, .sh, .py, .php, .css, .yaml, .sql, .log, .csv, .twig, .md" required/>
-                        <i class="fa-solid fa-paperclip"></i>
-                    </label>
+{#                    <label class="file-label" for="file">#}
+{#                        <input type="file" id="file" name="file" accept="text/plain, text/html, text/xml, application/json, text/javascript, .sh, .py, .php, .css, .yaml, .sql, .log, .csv, .twig, .md" required/>#}
+{#                        <i class="fa-solid fa-paperclip"></i>#}
+{#                    </label>#}
 {#                    <label class="micro-label" for="micro">#}
 {#                        <i class="fa-solid fa-microphone-slash"></i>#}
 {#                    </label>#}

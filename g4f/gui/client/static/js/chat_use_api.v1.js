@@ -6,11 +6,12 @@ const stop_generating   = document.querySelector(`.stop_generating`);
 const regenerate        = document.querySelector(`.regenerate`);
 const sidebar           = document.querySelector(".conversations");
 const sidebar_button    = document.querySelector(".mobile-sidebar");
+const settingsButton        = document.getElementById("settings-button");
 const sendButton        = document.getElementById("send-button");
-const imageInput        = document.getElementById("image");
-const cameraInput       = document.getElementById("camera");
-const fileInput         = document.getElementById("file");
-const microLabel        = document.querySelector(".micro-label");
+// const imageInput        = document.getElementById("image");
+// const cameraInput       = document.getElementById("camera");
+// const fileInput         = document.getElementById("file");
+// const microLabel        = document.querySelector(".micro-label");
 const inputCount        = document.getElementById("input-count").querySelector(".text");
 const providerSelect    = document.getElementById("provider");
 const modelSelect       = document.getElementById("model");
@@ -225,10 +226,10 @@ const register_message_buttons = async () => {
         }
     });
     document.querySelectorAll(".message .fa-whatsapp").forEach(async (el) => {
-        if (!el.parentElement.href) {
-            const text = el.parentElement.parentElement.parentElement.innerText;
-            el.parentElement.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
-        }
+        // if (!el.parentElement.href) {
+        //     const text = el.parentElement.parentElement.parentElement.innerText;
+        //     el.parentElement.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        // }
     });
     document.querySelectorAll(".message .fa-print").forEach(async (el) => {
         if (!("click" in el.dataset)) {
@@ -273,18 +274,18 @@ const handle_ask = async () => {
     count_input()
     await add_conversation(window.conversation_id, message);
 
-    if ("text" in fileInput.dataset) {
-        message += '\n```' + fileInput.dataset.type + '\n'; 
-        message += fileInput.dataset.text;
-        message += '\n```'
-    }
+    // if ("text" in fileInput.dataset) {
+    //     message += '\n```' + fileInput.dataset.type + '\n';
+    //     message += fileInput.dataset.text;
+    //     message += '\n```'
+    // }
     let message_index = await add_message(window.conversation_id, "user", message);
     window.token = message_id();
 
-    if (imageInput.dataset.src) URL.revokeObjectURL(imageInput.dataset.src);
-    const input = imageInput && imageInput.files.length > 0 ? imageInput : cameraInput
-    if (input.files.length > 0) imageInput.dataset.src = URL.createObjectURL(input.files[0]);
-    else delete imageInput.dataset.src
+    // if (imageInput.dataset.src) URL.revokeObjectURL(imageInput.dataset.src);
+    // const input = imageInput && imageInput.files.length > 0 ? imageInput : cameraInput
+    // if (input.files.length > 0) imageInput.dataset.src = URL.createObjectURL(input.files[0]);
+    // else delete imageInput.dataset.src
 
     message_box.innerHTML += `
         <div class="message" data-index="${message_index}">
@@ -296,10 +297,6 @@ const handle_ask = async () => {
             <div class="content" id="user_${token}"> 
                 <div class="content_inner">
                 ${markdown_render(message)}
-                ${imageInput.dataset.src
-                    ? '<img src="' + imageInput.dataset.src + '" alt="Image upload">'
-                    : ''
-                }
                 </div>
                 <div class="count">
                     ${count_words_and_tokens(message, get_selected_model())}
@@ -418,19 +415,19 @@ async function add_message_chunk(message) {
 //     }
 // });
 
-cameraInput?.addEventListener("click", (e) => {
-    if (window?.pywebview) {
-        e.preventDefault();
-        pywebview.api.take_picture();
-    }
-});
-
-imageInput?.addEventListener("click", (e) => {
-    if (window?.pywebview) {
-        e.preventDefault();
-        pywebview.api.choose_image();
-    }
-});
+// cameraInput?.addEventListener("click", (e) => {
+//     if (window?.pywebview) {
+//         e.preventDefault();
+//         pywebview.api.take_picture();
+//     }
+// });
+//
+// imageInput?.addEventListener("click", (e) => {
+//     if (window?.pywebview) {
+//         e.preventDefault();
+//         pywebview.api.choose_image();
+//     }
+// });
 
 const ask_gpt = async (message_index = -1) => {
     regenerate.classList.add(`regenerate-hidden`);
@@ -474,8 +471,9 @@ const ask_gpt = async (message_index = -1) => {
     message_box.scrollTop = message_box.scrollHeight;
     window.scrollTo(0, 0);
     try {
-        const input = imageInput && imageInput.files.length > 0 ? imageInput : cameraInput;
-        const file = input && input.files.length > 0 ? input.files[0] : null;
+        // const input = imageInput && imageInput.files.length > 0 ? imageInput : cameraInput;
+        // const file = input && input.files.length > 0 ? input.files[0] : null;
+        const file = null;
         const provider = providerSelect.options[providerSelect.selectedIndex].value;
         const auto_continue = document.getElementById("auto_continue")?.checked;
         if (file && !provider)
@@ -490,7 +488,8 @@ const ask_gpt = async (message_index = -1) => {
             id: window.token,
             conversation_id: window.conversation_id,
             model: get_selected_model(),
-            web_search: document.getElementById("switch").checked,
+            // web_search: document.getElementById("switch").checked,
+            web_search: false,
             provider: provider,
             messages: messages,
             auto_continue: auto_continue,
@@ -501,9 +500,9 @@ const ask_gpt = async (message_index = -1) => {
             content_inner.innerHTML = html;
             highlight(content_inner);
 
-            if (imageInput) imageInput.value = "";
-            if (cameraInput) cameraInput.value = "";
-            if (fileInput) fileInput.value = "";
+            // if (imageInput) imageInput.value = "";
+            // if (cameraInput) cameraInput.value = "";
+            // if (fileInput) fileInput.value = "";
         }
     } catch (e) {
         console.error(e);
@@ -1138,6 +1137,9 @@ async function on_api() {
             messageInput.style.height = messageInput.scrollHeight  + "px";
         }
     });
+
+    settingsButton.title = 'Open settings';
+    sendButton.title = 'Send message';
     sendButton.addEventListener(`click`, async () => {
         console.log("clicked send");
         if (prompt_lock) return;
@@ -1226,56 +1228,56 @@ async function load_version() {
 }
 setTimeout(load_version, 2000);
 
-[imageInput, cameraInput].forEach((el) => {
-    el.addEventListener('click', async () => {
-        el.value = '';
-        if (imageInput.dataset.src) {
-            URL.revokeObjectURL(imageInput.dataset.src);
-            delete imageInput.dataset.src
-        }
-    });
-});
+// [imageInput, cameraInput].forEach((el) => {
+//     el.addEventListener('click', async () => {
+//         el.value = '';
+//         if (imageInput.dataset.src) {
+//             URL.revokeObjectURL(imageInput.dataset.src);
+//             delete imageInput.dataset.src
+//         }
+//     });
+// });
 
-fileInput.addEventListener('click', async (event) => {
-    fileInput.value = '';
-    delete fileInput.dataset.text;
-});
+// fileInput.addEventListener('click', async (event) => {
+//     fileInput.value = '';
+//     delete fileInput.dataset.text;
+// });
 
-fileInput.addEventListener('change', async (event) => {
-    if (fileInput.files.length) {
-        type = fileInput.files[0].type;
-        if (type && type.indexOf('/')) {
-            type = type.split('/').pop().replace('x-', '')
-            type = type.replace('plain', 'plaintext')
-                       .replace('shellscript', 'sh')
-                       .replace('svg+xml', 'svg')
-                       .replace('vnd.trolltech.linguist', 'ts')
-        } else {
-            type = fileInput.files[0].name.split('.').pop()
-        }
-        fileInput.dataset.type = type
-        const reader = new FileReader();
-        reader.addEventListener('load', async (event) => {
-            fileInput.dataset.text = event.target.result;
-            if (type == "json") {
-                const data = JSON.parse(fileInput.dataset.text);
-                if ("g4f" in data.options) {
-                    Object.keys(data).forEach(key => {
-                        if (key != "options" && !localStorage.getItem(key)) {
-                            appStorage.setItem(key, JSON.stringify(data[key]));
-                        } 
-                    });
-                    delete fileInput.dataset.text;
-                    await load_conversations();
-                    fileInput.value = "";
-                }
-            }
-        });
-        reader.readAsText(fileInput.files[0]);
-    } else {
-        delete fileInput.dataset.text;
-    }
-});
+// fileInput.addEventListener('change', async (event) => {
+//     if (fileInput.files.length) {
+//         type = fileInput.files[0].type;
+//         if (type && type.indexOf('/')) {
+//             type = type.split('/').pop().replace('x-', '')
+//             type = type.replace('plain', 'plaintext')
+//                        .replace('shellscript', 'sh')
+//                        .replace('svg+xml', 'svg')
+//                        .replace('vnd.trolltech.linguist', 'ts')
+//         } else {
+//             type = fileInput.files[0].name.split('.').pop()
+//         }
+//         fileInput.dataset.type = type
+//         const reader = new FileReader();
+//         reader.addEventListener('load', async (event) => {
+//             fileInput.dataset.text = event.target.result;
+//             if (type == "json") {
+//                 const data = JSON.parse(fileInput.dataset.text);
+//                 if ("g4f" in data.options) {
+//                     Object.keys(data).forEach(key => {
+//                         if (key != "options" && !localStorage.getItem(key)) {
+//                             appStorage.setItem(key, JSON.stringify(data[key]));
+//                         }
+//                     });
+//                     delete fileInput.dataset.text;
+//                     await load_conversations();
+//                     fileInput.value = "";
+//                 }
+//             }
+//         });
+//         reader.readAsText(fileInput.files[0]);
+//     } else {
+//         delete fileInput.dataset.text;
+//     }
+// });
 
 systemPrompt?.addEventListener("input", async () => {
     await save_system_message();
@@ -1292,18 +1294,18 @@ function get_selected_model() {
 async function api(ressource, args=null, file=null) {
     if (window?.pywebview) {
         if (args !== null) {
-            if (ressource == "models") {
+            if (ressource === "models") {
                 ressource = "provider_models";
             }
             return pywebview.api[`get_${ressource}`](args);
         }
         return pywebview.api[`get_${ressource}`]();
     }
-    if (ressource == "models" && args) {
+    if (ressource === "models" && args) {
         ressource = `${ressource}/${args}`;
     }
     const url = `/backend-api/v2/${ressource}`;
-    if (ressource == "conversation") {
+    if (ressource === "conversation") {
         let body = JSON.stringify(args);
         const headers = {
             accept: 'text/event-stream'
@@ -1404,58 +1406,58 @@ function save_storage() {
     }
 }
 
-const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-if (SpeechRecognition) {
-    const mircoIcon = microLabel.querySelector("i");
-    mircoIcon.classList.add("fa-microphone");
-    mircoIcon.classList.remove("fa-microphone-slash");
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
-
-    let startValue;
-    let lastDebounceTranscript;
-    recognition.onstart = function() {
-        microLabel.classList.add("recognition");
-        startValue = messageInput.value;
-        lastDebounceTranscript = "";
-    };
-    recognition.onend = function() {
-        messageInput.focus();
-    };
-    recognition.onresult = function(event) {
-        if (!event.results) {
-            return;
-        }
-        let result = event.results[event.resultIndex];
-        let isFinal = result.isFinal && (result[0].confidence > 0);
-        let transcript = result[0].transcript;
-        if (isFinal) {
-            if(transcript == lastDebounceTranscript) {
-                return;
-            }
-            lastDebounceTranscript = transcript;
-        }
-        if (transcript) {
-            messageInput.value = `${startValue ? startValue+"\n" : ""}${transcript.trim()}`;
-            if (isFinal) {
-                startValue = messageInput.value;
-            }
-            messageInput.style.height = messageInput.scrollHeight  + "px";
-            messageInput.scrollTop = messageInput.scrollHeight;
-        }
-    };
-
-    microLabel.addEventListener("click", () => {
-        if (microLabel.classList.contains("recognition")) {
-            recognition.stop();
-            microLabel.classList.remove("recognition");
-        } else {
-            const lang = document.getElementById("recognition-language")?.value;
-            recognition.lang = lang || navigator.language;
-            recognition.start();
-        }
-    });
-}
+// const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+// if (SpeechRecognition) {
+//     const mircoIcon = microLabel.querySelector("i");
+//     mircoIcon.classList.add("fa-microphone");
+//     mircoIcon.classList.remove("fa-microphone-slash");
+//
+//     const recognition = new SpeechRecognition();
+//     recognition.continuous = true;
+//     recognition.interimResults = true;
+//     recognition.maxAlternatives = 1;
+//
+//     let startValue;
+//     let lastDebounceTranscript;
+//     recognition.onstart = function() {
+//         microLabel.classList.add("recognition");
+//         startValue = messageInput.value;
+//         lastDebounceTranscript = "";
+//     };
+//     recognition.onend = function() {
+//         messageInput.focus();
+//     };
+//     recognition.onresult = function(event) {
+//         if (!event.results) {
+//             return;
+//         }
+//         let result = event.results[event.resultIndex];
+//         let isFinal = result.isFinal && (result[0].confidence > 0);
+//         let transcript = result[0].transcript;
+//         if (isFinal) {
+//             if(transcript == lastDebounceTranscript) {
+//                 return;
+//             }
+//             lastDebounceTranscript = transcript;
+//         }
+//         if (transcript) {
+//             messageInput.value = `${startValue ? startValue+"\n" : ""}${transcript.trim()}`;
+//             if (isFinal) {
+//                 startValue = messageInput.value;
+//             }
+//             messageInput.style.height = messageInput.scrollHeight  + "px";
+//             messageInput.scrollTop = messageInput.scrollHeight;
+//         }
+//     };
+//
+//     microLabel.addEventListener("click", () => {
+//         if (microLabel.classList.contains("recognition")) {
+//             recognition.stop();
+//             microLabel.classList.remove("recognition");
+//         } else {
+//             const lang = document.getElementById("recognition-language")?.value;
+//             recognition.lang = lang || navigator.language;
+//             recognition.start();
+//         }
+//     });
+// }
